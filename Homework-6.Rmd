@@ -1,0 +1,293 @@
+---
+title: "Homework-6"
+author: "Isaac Kobby Anni"
+date: "2024-10-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+### Problem 2
+#### Consider the data for the total compensation in 2008 received by chief executive officers employed by industrial companies listed in Table 4.3.
+
+
+```{r}
+compensation_amount <- c(11.73, 6.70660, 7.56180, 7.7738, 5.825, 7.121, 15.6062, 
+                        12.0133, 10.7677, 7.0903, 4.3673, 14.3879, 6.5997, 6.38, 
+                        6.0286, 10.7058, 17.558, 4.9357, 9.6019, 14.309, 9.3458, 
+                        10.1015, 4.8093, 6.4407, 12.3189, 17.8454, 10.326, 2.2113, 
+                        5.5036, 6.5355, 11.893, 3.109, 5.5714, 10.8262, 5.9958, 
+                        4.2912, 2.0294, 8.0771, 5.3107, 9.252, 9.1823, 5.2043, 6.0456) # the values are divided by 100000
+```
+
+
+**a)** Produce a relative frequency histogram for the data wiith the Rule of Twelve
+```{r}
+inc12<-(max(compensation_amount)-min(compensation_amount))/12.
+brk12<-min(compensation_amount)+(0:12)*inc12
+hist(compensation_amount,breaks=brk12,freq=FALSE,main=NULL,
+      xlab="Total Compensation\n(In Millions of Dollars)",xlim=c(0,20),xaxt="n",
+      ylab="Relative Frequency",ylim=c(0,0.2)
+     )
+axis(1,at=(0:5)*4, labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Rule of Twelve",pos=2)
+```
+
+- Histogram with Rule of Twelve. 
+
+
+**b)** Produce a relative frequency histogram for the data wiith the Robust Rule of Twelve
+```{r}
+qmount<-quantile(compensation_amount)
+iqrmount<-qmount[4]-qmount[2]
+inc12r<-4.45*iqrmount/12.
+em12r<-ceiling((max(compensation_amount)-min(compensation_amount))/inc12r)
+brk12r<-min(compensation_amount)+(0:em12r)*inc12r
+hist(compensation_amount,breaks=brk12r,freq=FALSE,
+      main=NULL,xlab="Total Compensation\n(In Millions of Dollars)",
+     xlim=c(0,20),xaxt="n",
+      ylab="Relative Frequency",
+     ylim=c(0,0.20)
+     )
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Robust Rule of Twelve",pos=2)
+```
+
+- Histogram with Robust Rule of Twelve. 
+
+**c)** Produce a relative frequency histogram for the data wiith the Sturges' Rule
+```{r}
+em<-ceiling(1+log(length(compensation_amount))/log(2.))
+incsturges<-(max(compensation_amount)-min(compensation_amount))/em
+brksturges<-min(compensation_amount)+(0:em)*incsturges
+
+hist(compensation_amount,breaks=brksturges,
+     freq=FALSE,main=NULL,
+     xlab="Total Compensation\n(In Millions of Dollars)",
+      xlim=c(0,20),xaxt="n",
+     ylab="Relative Frequency",
+     ylim=c(0,0.20)
+     )
+
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Sturges Rule",pos=2)
+```
+
+- Histogram plot for Strurges's Rule
+
+**d)** Produce a relative frequency histogram for the data with Doane's Rule, which is a robust version of Sturge's Rule.
+```{r}
+meanmount<-mean(compensation_amount)
+namount<-length(compensation_amount)
+devamount<-compensation_amount-meanmount
+m2<-sum(devamount*devamount)/namount
+m3<-sum(devamount*devamount*devamount)/namount
+c1<-m3/sqrt(m2*m2*m2)
+c1<-c1*sqrt((namount+1)*(namount+3)/(6.*(namount-2.)))
+emdoane<-ceiling(1+(log(namount)+log(1+c1))/log(2))
+incdoane<-(max(compensation_amount)-min(compensation_amount))/emdoane
+brkdoane<-min(compensation_amount)+(0:emdoane)*incdoane
+
+hist(compensation_amount,breaks=brkdoane,freq=FALSE,main=NULL,
+     xlab="Total Compensation\n(In Millions of Dollars)",
+     xaxt="n",
+     xlim=c(0,20),
+     ylab="Relative Frequency",
+     ylim=c(0,0.20)
+     )
+
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Doane's Rule",pos=2)
+```
+
+- Histogram plot for the Doane's Rule
+
+**e)** Comment on the effect of using the robust rules compared to their nonrobust counterparts when the data appear to be symmetric and without outliers.
+
+-  The plots suggest that the data is not symmetric and is slightly right-skewed. The Doane’s Rule plot appears more suitable for right-skewed data, providing a clearer view of the skewness. Additionally, the Rule of Twelve highlights the skewness more effectively than the Robust Rule of Twelve. However, the plot using the Robust Rule of Twelve reveals some outliers. Since the Robust Rule accounts for 99.7% of the probability mass under a normal curve, it efficiently handles outliers. If there are no outliers in the dataset, the difference between the robust and non-robust rules is minimal, and both methods perform well.
+
+### Problem 7
+
+**a)** Produce a relative frequency histogram for the total compensation data. Justify your choice of rule for determining the width of each class interval.
+```{r}
+qmount<-quantile(compensation_amount)
+iqrmount<-qmount[4]-qmount[2]
+inc12r<-4.45*iqrmount/12.
+em12r<-ceiling((max(compensation_amount)-min(compensation_amount))/inc12r)
+brk12r<-min(compensation_amount)+(0:em12r)*inc12r
+hist(compensation_amount,breaks=brk12r,freq=FALSE,
+      main=NULL,xlab="Total Compensation\n(In Millions of Dollars)",
+     xlim=c(0,20),xaxt="n",
+      ylab="Relative Frequency",
+     ylim=c(0,0.20)
+     )
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Robust Rule of Twelve",pos=2)
+```
+
+
+- As said in the **2e**, the Robust Rule of Twelve is very efficient for different data and handles outlier in a better to easily see the distribution of the data as it accounts for 99.7 of the probability mass under the normal curve. 
+
+**b)** Add an EDF to the histogram of part (a)
+```{r}
+qmount<-quantile(compensation_amount)
+iqrmount<-qmount[4]-qmount[2]
+inc12r<-4.45*iqrmount/12.
+em12r<-ceiling((max(compensation_amount)-min(compensation_amount))/inc12r)
+brk12r<-min(compensation_amount)+(0:em12r)*inc12r
+hist(compensation_amount,breaks=brk12r,freq=FALSE,
+      main=NULL,xlab="Total Compensation\n(In Millions of Dollars)",
+     xlim=c(0,20),xaxt="n",
+      ylab="Relative Frequency",
+     ylim=c(0,1.0)
+     )
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Robust Rule of Twelve",pos=2)
+
+ecdfamount <- ecdf(compensation_amount)
+lines(ecdfamount, lwd = 2, lty = 1)
+```
+
+- Robust Rule of Twelve Histogram plot with EDF. 
+
+**c)** Produce a kernel density estimate for the total compensation data. Add this to your histogram of part (a).
+```{r}
+qmount<-quantile(compensation_amount)
+iqrmount<-qmount[4]-qmount[2]
+inc12r<-4.45*iqrmount/12.
+em12r<-ceiling((max(compensation_amount)-min(compensation_amount))/inc12r)
+brk12r<-min(compensation_amount)+(0:em12r)*inc12r
+hist(compensation_amount,breaks=brk12r,freq=FALSE,
+      main=NULL,xlab="Total Compensation\n(In Millions of Dollars)",
+     xlim=c(0,20),xaxt="n",
+      ylab="Relative Frequency",
+     ylim=c(0,.20)
+     )
+axis(1,at=(0:5)*4,
+labels=c("0","4","8","12","16","20"))
+text(x=20,y=0.20,labels="Robust Rule of Twelve",pos=2)
+
+denamount<-density(compensation_amount,kernel="epanechnikov",from=0,to=20)
+lines(denamount$x,denamount$y, lwd = 2)
+```
+
+- Robust Rule of Twelve with Kernel Density (Epanechnikov method) for the histogram plot. 
+
+**d)** Which do you prefer: adding an EDF plot or a kernel density estimate to a histogram? Justify your choice.
+- I prefer the one with a kernel density estimate. This is because the shape of the distribution can be easily seen in that one. It would be easier to explain that graph to a public audience than the one with an EDF plot.
+
+### Problem 9 
+#### Examine the lattice and ggplot2 code used to produce the violin plots and boxplots of Figures 6.27 and 6.28, respectively. Which of these two R packages would you prefer to use on a routine basis? Discuss.
+- Both packages use the Gaussian kernel for kernel density estimation and in fact can even use custom kernel functions, but there is a noticeable difference in the graphics they produce. I prefer the lattice package. It makes skewness easier to observe, especially since it includes box-and-whisker plots within the violin plots, clearly showing the minimum and maximum values. This feature is present in lattice but missing in ggplot. Aesthetically, I prefer smaller, more compact graphs, which lattice provides, making the visual more pleasing. In contrast, ggplot tends to produce larger graphs, which I find less appealing.
+
+### Problem 10
+#### Consider the time passage data for light in Table 4.4 that was obtained by Simon Newcomb.
+```{r}
+light <- c(28,32,31,34,21,26,40,25,39,22,30,25,30,30,27,
+           19,27,23,36,27,24,25,33,16,37,24,26,24,25,
+           26,29,31,23,16,28,33,28,26,
+           27,29,32,29,28,21,36,25,29,36,29,20,26,36,27,
+           -44,28,32,-2,28,24,32,32,23,22,28,24,27)
+```
+
+**a)** Produce a kernel density for the data in Table 4.4 using each of the seven different kernel functions presented in this chapter. In each instance use the bandwidth as determined by Silverman’s Rule of Thumb.
+
+- **Epanechnikov Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Epanechnikov Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="epanechnikov",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Cosine Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Cosine Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="cosine",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Biweight Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Biweight Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="biweight",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Optcosine Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Optcosine Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="optcosine",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Triangular Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Tiangular Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="triangular",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Rectangular Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Rectangular Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="rectangular",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+- **Gaussian Kernel Density Plot**
+```{r}
+plot(c(-50,0),c(50,0.10),
+     xlim=c(-50,50),
+     ylim=c(0,0.10),
+     main="Gaussian Kernel",xlab="Light\n(In Microseconds)",
+     ylab="Density",type="n")
+
+den_light <- density(light,bw = "nrd0",kernel="gaussian",from=-50,to=50)
+lines(den_light$x,den_light$y,lty=2)
+```
+
+
+**b)** Based on your kernel density estimates for part (a), do you have a preferred choice for kernel function or is one as good as another? Justify your answer.
+
+- All the kernel density estimates appear similar in the plots above, except for the one with the rectangular kernel. There's minimal difference between the various kernels in terms of mean and integrated square error. Therefore, it doesn't really matter which kernel is selected, as they all look alike, except for the rectangular kernel.

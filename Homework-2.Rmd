@@ -1,0 +1,288 @@
+---
+title: "Homework 2"
+author: "Isaac Kobby Anni"
+date: "September 17, 2024"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**PROBLEM 4**
+
+#### a. Is the ordering of categories in table 2.2 alphabetical or something else?**
+  
+- No. The ordering of categories is not in alphabetical order. It does not seem to have any observable order. 
+
+
+#### b. Draft a dot chart
+```{r}
+library(ggplot2)
+require(ggplot2)
+require(ggthemes)
+
+agency <- c("Agriculture",
+            "Commerce",
+            "Defense",
+            "Education",
+            "Energy",
+            "Health Services",
+            "Homeland Security",
+            "Urband Development",
+            "Interior",
+            "Justice",
+            "Labor",
+            "State Programs",
+            "Transportation",
+            "Treasury",
+            "Veterans Affairs",
+            "Corps of Engineers",
+            "EPA",
+            "Office of the President",
+            "Judicial branch",
+            "Legislative branch",
+            "Space Administration",
+            "Science Foundation",
+            "Small Businesses",
+            "Social Security",
+            "Other Agencies")
+
+amount <- c(20.8, 8.2, 515.4, 59.2, 25.0, 70.4, 37.6, 38.5,
+            10.6, 20.3, 10.5, 38.3, 11.5, 12.5, 44.8, 4.7, 
+            7.1, 0.4, 6.3, 4.7, 17.6, 6.9, 0.7, 8.4, 7.2)
+
+AMOUNT <- amount
+AGENCY <- agency
+
+US_dotplot <- data.frame(AGENCY, AMOUNT)
+
+figure_1 <- ggplot(US_dotplot) +
+  geom_point(aes(x = AMOUNT, y = AGENCY)) + xlab("Amount") + ylab(("Agency")) +theme(axis.title.x = element_text(face = "bold"),    axis.title.y = element_text(face = "bold"), plot.title = element_text(face = "bold", size = "14")) + ggtitle("United Nations Budget")
+
+print(figure_1)
+```
+
+- The dot indicates that the defense agency makes the most funds request according to the budget.  
+
+####  c. Pie Chart by Agency 
+
+```{r}
+figure_2 <- ggplot(US_dotplot, aes(x = "", y = AMOUNT,  fill = AGENCY)) +
+  geom_bar(stat = "identity", width = 1, color = "black")+ ggtitle("Funds By Agency") +
+  coord_polar("y", start = 0) +
+  theme_void()
+
+print(figure_2)
+```
+
+- Pie chart might not be the best option for this plot due to the many categories. The proportions are hardly distinguishable especially for categories that are underrepresented. 
+
+
+**Problem 5**
+
+**a. Horizontal Bar Chart**
+
+```{r}
+par(fin=c(4.00,4.00),pin=c(4.00,4.00),
+mai=c(1.0, 0.0, 0.15, 0))
+barplot(AMOUNT,space=0.5,names.arg=NULL,
+          horiz=TRUE,axes=FALSE,xlim=c(0,600),
+          xlab="Billions of US Dollars",col="skyblue", main = "Funding By Agency")
+  
+  yy<-1.5*(1:length(AMOUNT)-0.33)
+  axis(1,tick=TRUE,yaxp=c(0,600,10))
+  yy<-1.5*(1:length(AMOUNT)-.375)
+  axis(2,at=yy+0.2,labels=AGENCY,tck=0,tcl=0,col=0,las=2,hadj=0,outer=TRUE,line=-2,cex.axis=0.5)
+
+```
+
+- It seems defense requested the most funds according to the budget for the fiscal year, 2009. While office of the president and small businesses have the lowest funds request amount. 
+
+
+**b. Vertical Bar Chart**
+```{r}
+agency <- c("Agriculture",
+            "Commerce",
+            "Defense",
+            "Education",
+            "Energy",
+            "Health Services",
+            "Homeland Security",
+            "Urband Development",
+            "Interior",
+            "Justice",
+            "Labor",
+            "State Programs",
+            "Transportation",
+            "Treasury",
+            "Veterans Affairs",
+            "Corps of Engineers",
+            "EPA",
+            "Office of the President",
+            "Judicial branch",
+            "Legislative branch",
+            "Space Administration",
+            "Science Foundation",
+            "Small Businesses",
+            "Social Security",
+            "Other Agencies")
+
+amount <- c(20.8, 8.2, 515.4, 59.2, 25.0, 70.4, 37.6, 38.5,
+            10.6, 20.3, 10.5, 38.3, 11.5, 12.5, 44.8, 4.7, 
+            7.1, 0.4, 6.3, 4.7, 17.6, 6.9, 0.7, 8.4, 7.2)
+
+AMOUNT <- amount
+AGENCY <- agency
+
+US_Barplot <- data.frame(AGENCY, AMOUNT)
+
+
+#
+par(fin=c(4.45,4.45),pin=c(4.45,4.45),
+mai=c(2.2,0.8,0.15,0.0))
+#
+barplot(AMOUNT,space=0.5,names.arg=NULL,
+horiz=FALSE,axes=FALSE,y=c(0,600),
+ylab="Billions of US Dollars",col="skyblue", main = "Funds by Agency")
+
+#
+yy<-1.5*(1:length(amount)-0.33)
+axis(2,tick=TRUE,xaxp=c(0,600,10))
+text(x=yy-0.2,y=-50,labels=AGENCY,
+offset=0,srt=80,adj=c(1.0,1.0),xpd=TRUE)
+
+```
+
+
+
+#### c. Which is more eye-appealing?
+
+- The horizontal barplot for this case seems more eye catchy. Reasons being that, although the vertical bars are most popular, the categories makes it hard to associate the categories with its corresponding bar. In as much as it is easy to see which bar is tallest in the vertical, it is also easy to see which bar is tallest and it associate category more clearer in the horizontal bar since the vertical labeling on the y-axis gives room to the size of the categories. 
+
+
+
+
+**Problem 8**
+
+#### a. What sort of ordering is used in Table 2.3 
+
+- There's no ordering in the table 2.3. It seems to me that the data is in its raw form without order or randomly aranged. 
+
+#### b. What sort of ordering do you prefer. Justify Preference
+- I will sort the data in descending order of "the thousand barrels per day" field. This is because upon graphical representation of data like a bar plot, an audience will immediately relate to a pattern, like, seeing the country with the most oil import per day and the vice versa. But having the data randomly displaced makes it difficult for one to see the story the data is about. 
+
+
+
+#### c. Produce a Vertical Bar chart
+
+```{r}
+library(ggplot2)
+require(ggplot2)
+require(ggthemes)
+
+country <- c("Canada",
+             "Saudi Arabia",
+             "Mexico",
+             "Nigeria",
+             "Venezuela",
+             "Iraq",
+             "Angola",
+             "Kuwait",
+             "Colombia",
+             "Algeria",
+             "Ecuador",
+             "Brazil",
+             "Congo(Brazaville)",
+             "Chad",
+             "Russia")
+
+barrels <- c(1848, 1382, 1398, 1085, 1301,
+             433, 504, 165, 106, 474, 226,
+             156, 48, 78, 40)
+
+COUNTRY <- country
+BARRELS <- barrels
+
+US_CRUDE_OIL <- data.frame(COUNTRY, BARRELS)
+
+figure_5 <- ggplot(US_CRUDE_OIL, aes(x = COUNTRY, y = BARRELS, fill = as.factor(BARRELS))) +
+geom_bar(stat = "identity", width = 1, color = "white") + scale_fill_grey(start = 0.75, end = 0.25) + theme(legend.position = "none", axis.text.x = element_text(angle = 70, hjust = 1, color = "black"), plot.title = element_text(size = 14, face = "bold"), axis.title.x = element_text(color = "black", size = 12, face = "bold"), axis.title.y = element_text(color = "black", size = 12, face = "bold")) + ggtitle("US Crude Oil Import") + xlab("Country") + ylab("Barrels Per Day (1000s)")
+
+print(figure_5)
+```
+
+#### Did you encounter any difficulties?
+Yes customizing plot in ggplot2 is a bit tricky and time effective however it does gives a beautiful plot when it is figured out. 
+
+
+
+
+#### Problem 9
+Re-order the table from the least to the greatest.
+
+```{r}
+country <- c("Canada",
+             "Saudi Arabia",
+             "Mexico",
+             "Nigeria",
+             "Venezuela",
+             "Iraq",
+             "Angola",
+             "Kuwait",
+             "Colombia",
+             "Algeria",
+             "Ecuador",
+             "Brazil",
+             "Congo(Brazaville)",
+             "Chad",
+             "Russia")
+
+barrels <- c(1848, 1382, 1398, 1085, 1301,
+             433, 504, 165, 106, 474, 226,
+             156, 48, 78, 40)
+
+COUNTRY <- country
+BARRELS <- barrels
+
+US_CRUDE_OIL <- data.frame(COUNTRY, BARRELS)
+
+
+US_CRUDE_OIL_new <- US_CRUDE_OIL[order(US_CRUDE_OIL[, 2], decreasing = FALSE),]
+US_CRUDE_OIL_new 
+```
+
+#### b. Horizontal Dot Chart**
+
+```{r}
+Country<-US_CRUDE_OIL_new$COUNTRY[length(US_CRUDE_OIL_new$COUNTRY):1]
+Barrels<-US_CRUDE_OIL_new$BARRELS[length(US_CRUDE_OIL_new$BARRELS):1]
+
+
+par(fin=c(4.00,4.00),pin=c(4.00,4.00),
+mai=c(0.85,1.0,0.5,0.0))
+
+plot(Barrels,1:length(Country),type="n",
+xaxt="n",yaxt="n",xlim=c(0,2000/1.04),
+ylim=c(0,length(Country)+1),
+xlab='Barrels per Day (in 1000s)',
+ylab='',xaxs="r",yaxs="i", main = "US Crude Oil Import")
+
+
+for (i in 1:length(Country)) lines(x=c(0,Barrels[i]),
+y=c(i,i),lty=3)
+points(x=Barrels,y=1:length(Country),pch=19,cex=1.0)
+axis(1,at=400*(0:5),labels=TRUE,tick=TRUE,outer=FALSE)
+axis(2,at=1:15+0.5,labels=Country,tick=FALSE,
+outer=FALSE,las=2,hadj=1,padj=1)
+
+```
+
+- The country, that is, Canada having the most imports is indeed at the bottom of the plot. 
+
+#### c. Volumes of Imports from the neighbors of the US**
+The US import most of its crude oil from its two most nearest countries, Canada and Mexico. 

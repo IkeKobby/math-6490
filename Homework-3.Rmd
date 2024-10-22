@@ -1,0 +1,161 @@
+---
+title: "Homework-3"
+author: "Isaac Kobby Anni"
+date: "2024-09-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(ggplot2)
+require(ggplot2)
+library(ggthemes)
+require(ggthemes)
+library(dplyr)
+```
+
+
+### Problem 6
+
+**a)** Createa box-whisker chart for the data in Table 3.2.
+```{r}
+political_parties <- c("Conservative Party",
+                   "Labour Party",
+                   "Liberal Democrats",
+                   "Scottish & Welsh Nationalist Parties",
+                   "Green Parties",
+                   "UK Independence Parties",
+                   "Other Parties")
+
+percent <- c(42,32,14,4,3,1,4)
+
+se<-c(1.56,1.47,1.09,0.62,0.54,0.31,0.62)
+
+
+election_data <- data.frame(political_parties, percent)
+Dat <- election_data %>% arrange(percent)
+head(Dat)
+```
+
+```{r}
+Dat <- Dat %>% 
+  mutate(political_parties = reorder(political_parties, -percent))
+
+
+figure_6.a <- ggplot(Dat, aes(political_parties, percent)) +
+  theme_base() +
+  theme(plot.background = element_rect(fill = NULL, color = "white", linetype = "solid"),
+        panel.border = element_rect(fill = NULL, color = "white", linetype = "solid"),
+        axis.ticks.y = element_blank(),
+        axis.line.x = element_line(),
+        plot.margin = margin(0, 14, 7, 0, unit = "pt")) +
+  scale_y_continuous(expand = c(0, 0), breaks = 10 * (0:5), limits = c(0, 50)) +
+  geom_col(fill = "black") +
+  ggtitle("United Kingdom Election Survey") +
+  geom_errorbar(aes(ymin = percent, ymax = percent + se), width = 0) +
+  coord_flip() +
+  labs(x = NULL, y = "Percent")
+
+
+print(figure_6.a)
+```
+
+
+- I reordered the data in descending order to give an instant pattern to an audience when looking at this bar-whisker plot. 
+
+
+**b)** Create a dot-whisker chart for the data in Table 3.2.
+
+```{r}
+Dat <- Dat %>% 
+  mutate(political_parties = reorder(political_parties, -percent))
+
+figure_6.b<-ggplot(Dat, aes(political_parties, percent)) +
+  theme_base() + 
+  theme(plot.background = element_rect(fill=NULL,color="white", linetype="solid"), 
+        axis.ticks.y=element_blank(),
+        plot.margin=margin(7,14,7,0,unit="pt")) +
+  scale_y_continuous(expand=c(0,0), breaks=10*(0:5),limits=c(0,50)) +
+  geom_point(fill="black",size=2) +
+  geom_errorbar(aes(ymin=percent-se,ymax=percent+se),
+                width=0.1) + 
+  ggtitle("United Kingdom Election Survey") +
+  geom_errorbar(aes(ymin=percent-1.96*se,ymax=percent+1.96*se),
+                width=0) + 
+  coord_flip() +
+  labs(x=NULL,y="Percent")
+
+print(figure_6.b)
+```
+
+- The dot-whisker plot is also ordered to give a quick pattern glimpse to a viewer. It makes it easier for an audience to relate with the chart than in its raw randomized nature. 
+
+
+**c)** Compare Table 3.2, the bar-whisker chart, and the dot-whisker chart. Which of the
+three does a better job of conveying the results of the survey? Justify your answer.
+- I would say the bar-whisker plot conveys easily information about the data since it immediately relates to an audience because it is a familiar chart. Ignoring the errorbars at the end of each bar which probably might not more very common to audience of different background, the length of the bars give details about the amount of support from these political parties given the survey under study. 
+
+
+**d)** Which chart would you use if asked to draft a chart for a video media presentation
+for the general public? Justify your answer.
+- As mentioned in c) above, I would still go for the bar-whisker chart while elaborating the meaning of the lines at the end of each bar in the video probably with a highlighting message for a video media presentation. Bar chart is a common chart seen in many articles and general public news feed so a lot of the public will relate irrespective of domain knowledge with little or proper labeling annotations in video presentation. 
+
+
+## Problem 7.
+- data source: https://starrfm.com.gh/2024/09/election-2024-mahama-leads-bawumia-in-latest-polls-with-53/
+
+```{r}
+candidates <- c("John D. Mahama", "Dr. M. Bawumia", "Alan K. Kyerematin", "Nana K. Bediako", "Others", "Undecided")
+votes <- c(53.3, 31.6, 1.1, 2.3, 0.5, 11.2)
+
+gh_2024_likely_votes <- data.frame(candidates, votes)
+head(gh_2024_likely_votes)
+```
+
+
+**a)** Create a pie chart for preference among the respondents of the survey.
+
+```{r}
+figure_7.a <- ggplot(gh_2024_likely_votes, aes(x = "", y = votes,  fill = candidates)) +
+          geom_bar(stat = "identity", width = 1, color = "black") + 
+          ggtitle("Ghana 2024 General Election Likely Voters") +
+          coord_polar("y", start = 0) +
+          theme_void()
+
+print(figure_7.a)
+```
+
+- According to the  Ghana popular radio channel, Star FM, these are the responses from the likely voters in Ghana. The former president, Mahama seem to top the survey as a likely president to be elected for the nation Ghana in the upcoming December 2024 election. I did not paste the percentages on the pie chart since some proportions are very small and might make the plot ugly. A different plot might help if the choice of displaying the percentages is needed. 
+
+
+**b)** Create a dot-whisker chart with two-tiered error bars for the survey results. Depict 68% and 95% confidence intervals.
+```{r}
+gh_2024_likely_votes <- gh_2024_likely_votes %>% 
+  mutate(candidates = reorder(candidates, -votes))
+
+se_2 <- c(1.12, 1.12, 1.03, 1.04, 1.02, 1.08) # this info is just assumed. 
+
+figure_7.b<-ggplot(gh_2024_likely_votes, aes(candidates, votes)) +
+  theme_base() + 
+  theme(plot.background = element_rect(fill=NULL,color="white", linetype="solid"), 
+        axis.ticks.y=element_blank(),
+        plot.margin=margin(7,14,7,0,unit="pt")) +
+  scale_y_continuous(expand=c(0,0), breaks=10*(0:5),limits=c(0,55)) +
+  geom_point(fill="black",size=2) +
+  geom_errorbar(aes(ymin=votes-se_2, ymax=votes+se_2), width=0.1) + 
+  ggtitle("Ghana 2024 General Election Likely Voters") +
+  geom_errorbar(aes(ymin=votes-1.96*se_2,ymax=votes+1.96*se_2),
+                width=0) + 
+  coord_flip() +
+  labs(x=NULL,y="Votes")
+
+print(figure_7.b)
+```
+
+
+**c)** Would you use the pie chart from part (a) or the dot-whisker chart from part (b) to
+present the results of the survey as a party insider to the executive committee of your choice of political party? Justify your answer.
+
+- While the dot plot would've been better a better choice if presenting to audience of statistical or research scientists background because of the presense of confidence intervals the pie chart makes it more easy to for the layman audience because mostly political members are not statisiticians or mathematicians to give this high level dot plot. The dot plot is not also catchy and looks very hard to relate to if not from knowledge based background. Hence I would use the pie chart and in my presentation I would stress on the confidence interval as a side note. 

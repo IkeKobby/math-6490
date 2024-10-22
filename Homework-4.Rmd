@@ -1,0 +1,200 @@
+---
+title: "Ch4-Homework"
+author: "Isaac Kobby Anni"
+date: "2024-09-28"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Problem 2
+
+**Data**
+```{r}
+compensation_amount <- c(11.73, 6.70660, 7.56180, 7.7738, 5.825, 7.121, 15.6062, 
+                        12.0133, 10.7677, 7.0903, 4.3673, 14.3879, 6.5997, 6.38, 
+                        6.0286, 10.7058, 17.558, 4.9357, 9.6019, 14.309, 9.3458, 
+                        10.1015, 4.8093, 6.4407, 12.3189, 17.8454, 10.326, 2.2113, 
+                        5.5036, 6.5355, 11.893, 3.109, 5.5714, 10.8262, 5.9958, 
+                        4.2912, 2.0294, 8.0771, 5.3107, 9.252, 9.1823, 5.2043, 6.0456) # the values are divided by 100000
+
+```
+
+
+**a)** Produce a dot plot for total compensation. 
+
+```{r}
+dotchart(compensation_amount, main = "Dotplot of Total Compensation", 
+         xlab = "Amount in Millions",
+         xlim = c(0, 20),
+         col="darkblue",
+         bg="lightblue",
+         pch = 21,
+         cex = 0.8,
+         lty = 2, 
+         lwd = 0.5,
+         las = 1)
+```
+
+- Dotplot for total compensation seem to be spread out. The plot is generated with the standard r dotchart method. 
+
+
+**b)** Produce a stacked dotplot for total compensation.
+```{r}
+stripchart(compensation_amount, method = "stack", 
+           main = "Stacked Dotplot of Total Compensation", 
+           xlab = "Amount in Millions",
+           #xlim = c(0, 20),
+           offset = 0.5, 
+           pch = 19)
+```
+
+- Stacked dotplot for total compensation. We can see some points clustered mostly in the middle. 
+
+**c)** Produce a jittered dotplot for total compensation
+```{r}
+stripchart(compensation_amount, method = "jitter",
+           main = "Jittered Dotplot of Total Compensation", 
+           xlab = "Amount in Millions", 
+           #xlim = c(0, 20),
+           jitter = 0.1, 
+           pch = 19)
+```
+
+- Jittered dotplot for total compensation. The plot shows some level of clustered point fromm the beginning, the middle and points are somewhat separated at the end. 
+
+
+**d)** Which of the three dotplots would you choose for a presentation?
+
+- For a presentation, I would recommend the stacked dotplot. It provides a clear view of overlapping data points without distorting their positions, making it easier to spot clusters and trends without excessive overlap, as may happen in a standard dotplot. It also looks more polished and professional for presenting data distributions. A further analyses like cluster analysis using K-means could've been conducted to produce very clearer clustered groups for even more intuitive presentation.
+
+**e)** Do the plotting symbols in the dotplot of part (a) appear in clusters?
+
+- The dotplot in (a) shows that total compensation values are spread across a wide range, with no clear clustering around specific values. There is more concentration of points between 5 and 10 million, suggesting this is a common compensation range, but the distribution also includes several outliers below 5 million and beyond 15 million. Unlike the dotplot, the stack and jittered dotplots rather seem to show some level of clusters at the beginning, midddle and even at the end. Some of the companies in the concentrated region includes Rockwell Automation, Shaw Group, Sherwin-Williams, SPX, Timken, Waste Management, Jacobs Engineering AGCO, CSX etc. These companies have compensation amount between 5-10 million. 
+
+### Problem 4
+
+**a)** Produce a quantile boxplot for total compensation.
+```{r}
+boxplot(compensation_amount, 
+        main = "Quantile Boxplot for Total Compensation", 
+        xlab = "Amount in Millions", 
+        col = "lightblue",
+        horizontal = TRUE
+        )
+
+```
+
+
+**b)** Comment on the skewness in the quatile boxplot of your answer to part (a). 
+
+- The median is closer to the lower quartile and the upper whisker is longer than the lower whisker hence the data is rightly skewed. This means that a few CEO's have much higher compensation compared to the majority.
+
+**c)** Produce an outlier boxplot for total compensation.
+```{r}
+boxplot(compensation_amount, 
+        main = "Outlier Boxplot for Total Compensation", 
+        xlab = "Amount in Millions", 
+        col = "lightcoral",
+        horizontal = TRUE
+        )
+
+```
+
+**d)** Compare the quantile boxplot and the outlier boxplot of parts (a) and (c),respectively. What do you conclude regarding skewness and outliers?
+
+- Both the quantile boxplot and the outlier boxplot are essentially the same in this case, as no outliers are present in the data. If there were outliers, they would appear as points beyond the whiskers in the outlier boxplot. However, both plot show the same skewness, that is, long tails to the right as well as the median being closer to the lower quartile (the bottom of the box), further confirming that the distribution of total compensation is skewed to the right, thus enforces the conclusion from (b) that only a few of the CEO's actually have higher compensation amount. 
+
+**e)** Write a script for an oral presentation of the features in the outlier boxplot
+- In examining the total compensation data for CEOs, we first notice from the outlier boxplot that the distribution is clearly right-skewed. The median compensation is closer to the lower quartile, and the upper whisker is much longer than the lower one. This skewness indicates that while most CEOs have compensation amounts in a relatively tight range, a few CEOs receive much higher compensation, stretching the distribution upwards. It is als noted that, although the distribution remains right-skewed, there are no explicit outliers beyond the whiskers. This suggests that the high compensations, although large, are still within an expected range and are not classified as extreme outliers.
+
+### Problem 8
+
+**a)** Produce a stemplot for the data in Table 4.4 using a statistical software package with the leaf unit set equal to 10.
+```{r}
+require(aplpack)
+
+light <- c(28,32,31,34,21,26,40,25,39,22,30,25,30,30,
+           27,19,27,23,36,27,24,25,33,16,37,24,26,24,
+           25,26,29,31,23,16,28,33,28,26,27,29,32,29,
+           28,21,36,25,29,36,29,20,26,36,27,-44,28,32,
+           -2,28,24,32,32,23,22,28,24,27
+           )
+
+#stemplot with leaf unit = 10
+stem.leaf(light, unit = 10, Min = -45, Max = 45)
+```
+
+- Stem-and-leaf plot with unit set to 10. 
+
+**b)** How did the statistical software package order the negative leaves?
+
+- The negative leaves are ordered before the positive values, as seen with the stem -0* corresponding to -44 and -2. And they are ordered in ascending order of their absolute values, that is -44 then -2. 
+
+**c)** Produce a stemplot for the data in Table 4.4 using a statistical software package with the leaf unit set equal to 1. Experiment with 1, 2, and 5 leaves per stem.
+
+**Leaf. unit = 1**
+```{r}
+#stemplot with leaf unit = 1
+stem.leaf(light, unit = 1, Min = -45, Max = 45)
+```
+
+- Stem-and-leaf plot with unit set to 1. 
+
+**Leaf. unit = 2**
+```{r}
+#stemplot with leaf unit = 2
+stem.leaf(light, unit = 2, Min = -45, Max = 45)
+```
+- Stem-and-leaf plot with unit set to 2. 
+
+
+**Leaf. unit = 5**
+```{r}
+#stemplot with leaf unit = 5
+stem.leaf(light, unit = 5, Min = -45, Max = 45)
+```
+
+- Stem-and-leaf plot with unit set to 5. 
+
+**d)** Of the three stemplots produced in part (c), which do you prefer? Justify your
+answer.
+
+- I am definitely going for the stem-and-lead plot with unit set to 1 because it contains much more details that here represent the data properly and for audience priority, that option would give quick understanding to what information is being conveyed.  Secondly, I think that option, the unit =1, kind of gives an easy way of retrieving the data from the plot. 
+
+### Problem 9
+**a)** Produce an outlier boxplot for the data in Table 4.4 using a statistical software package.
+```{r}
+boxplot(light, 
+        main = "Outlier Boxplot for passage time of light", 
+        xlab = "Time in Milliseconds", 
+        col = "aquamarine",
+        horizontal = TRUE
+        )
+
+```
+
+- Outlier boxplot for table 4.4, passage time of light. Some outliers are spotted at the bottom of the lower whisker. 
+
+**b)** Which observations were noted as outliers in the boxplot produced in part (a)?
+```{r}
+Q1 <- quantile(light, 0.25)
+Q3 <- quantile(light, 0.75)
+IQR <- Q3 - Q1
+
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+
+outliers <- light[light < lower_bound | light > upper_bound]
+outliers
+```
+
+- As can be seen, observations -44 and -2 are the outliers in the outlier boxplot. 
+
+**c)** Are any of the outliers plotted in the boxplot extreme enough to be. called “far out”in Tukey’s [127] terminology? Does the statistical software package use different plotting symbols to differentiate between those outliers that are far out and those that
+are not?
+
+- An extreme point would have to lie outside of the outeer fence. The outer fence is given as $[(Q1 - 2 \times step), (Q3 - 2 \times step)]$ where $step = 1.5 \times IQR$. 
+- Therefore, the $step = 1.5 \times 6.75 = 10.125 \approx 10.13$. We can then compute the lower bound as follows: $24 - 2 \times (10.13) = 3.74$. Since outliers are all less than 0 and the lower bound is greater than 0, we can conclude that the points are far out. There's no need calculating the upper bound because the outliers are negatives and the lower bound is enough to make this conclusion. 
