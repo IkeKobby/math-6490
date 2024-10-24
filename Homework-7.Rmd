@@ -1,0 +1,565 @@
+---
+title: "Homework 7"
+author: "Isaac Kobby Anni"
+date: "10/24/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Problem 2
+
+**a)** Produce a histogram for the data in Table 4.4 using the Freedman-Diaconis Rule.
+
+```{r}
+light <- c(28,32,31,34,21,26,40,25,39,22,30,25,30,30,27,
+           19,27,23,36,27,24,25,33,16,37,24,26,24,25,
+           26,29,31,23,16,28,33,28,26, 27,29,32,29,28,
+           21,36,25,29,36,29,20,26,36,27,-44,28,32,-2,
+           28,24,32,32,23,22,28,24,27)
+
+qlight<-quantile(light,type=7)
+iqrlight<-qlight[4]-qlight[2]
+incfd<-2.*iqrlight/(length(light))^(1/3)
+emfd<-ceiling((max(light)-min(light))/incfd)
+brkfd<-min(light)+(0:emfd)*incfd
+h <- hist(light,breaks=brkfd,freq=TRUE,main = "Passage of Time",xlab="Time (In Microseconds)",xlim=c(-50,60),
+          xaxt="n",ylab="Relative Frequency",ylim=c(0,20))
+axis(1,at=(-5:5)*10,labels=c("-50","","-30","","-10","","10","","30","","50"))
+text(x=1400,y=0.0035,labels="Freedman-Diaconis Rule",pos=2)
+```
+
+- Histogram using the Freedman-Diaconis Rule.
+
+
+**b)** Add a normal curve to the histogtam obtained in part A.
+
+```{r}
+light <- c(28,32,31,34,21,26,40,25,39,22,30,25,30,30,27,
+           19,27,23,36,27,24,25,33,16,37,24,26,24,25,
+           26,29,31,23,16,28,33,28,26,
+           27,29,32,29,28,21,36,25,29,36,29,20,26,36,27,
+           -44,28,32,-2,28,24,32,32,23,22,28,24,27)
+
+qlight<-quantile(light,type=7)
+iqrlight<-qlight[4]-qlight[2]
+incfd<-2.*iqrlight/(length(light))^(1/3)
+emfd<-ceiling((max(light)-min(light))/incfd)
+brkfd<-min(light)+(0:emfd)*incfd
+h <- hist(light,breaks=brkfd,freq=TRUE,main = "Passage of Time",xlab="Time (In Microseconds)",xlim=c(-50,60), xaxt="n",ylab="Frequency",ylim=c(0,20))
+axis(1,at=(-5:5)*10,labels=c("-50","","-30","","-10","","10","","30","","50"))
+text(x=1400,y=0.0035,labels="Freedman-Diaconis Rule",pos=2)
+
+xfit<-seq(-50,60,length=50)
+yfit<-dnorm(xfit,mean=mean(light),sd=sd(light))
+yfit <- yfit*diff(h$mids[1:2])*length(light)
+lines(xfit, yfit, col="black", lwd=2)
+```
+
+- Histogram plot with the normal curve overlayed.
+
+
+
+**c)** Produce an outlier boxplot for the data in Table 4.4.
+
+```{r}
+light <- c(28,32,31,34,21,26,40,25,39,22,30,25,30,30,27,
+           19,27,23,36,27,24,25,33,16,37,24,26,24,25,
+           26,29,31,23,16,28,33,28,26,
+           27,29,32,29,28,21,36,25,29,36,29,20,26,36,27,
+           -44,28,32,-2,28,24,32,32,23,22,28,24,27)
+
+boxplot(light,range=1.5,horizontal=TRUE,
+pars=list(boxwex=1.5),xlab="Time (In Microseconds)",
+cex=1.0,ylim=c(-50.0,50.0),yaxp=c(0.,50.,3),
+outline=TRUE, main = "Passage of Time")
+```
+
+
+- Outlier Boxplot for Light data
+
+
+**d)** Comment on the impact of outliers when fitting a normal curve for a histogram.
+
+The outlier in the data causes the normal curve to be heavily skewed either to the right or left depending on the outlier values. For this particular data, the outliers are to the far left, and thus, the curve is heavily skewed to the left.
+
+
+
+### Problem 3
+
+**a)** 
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+Amount2 = density
+mean_amount<-mean(Amount2)
+n_amount<-length(Amount2)
+dev_amount<-Amount2-mean_amount
+
+m2<-sum(dev_amount^2)/n_amount
+
+m3<- (sum(dev_amount^3)/n_amount)
+cat("The value of m3 is ", m3,  "< 0 and hence we cannot use Doane's rule because of the log function", '\n')
+```
+
+```{r}
+Amount2 = density
+mean_amount<-mean(Amount2)
+n_amount<-length(Amount2)
+dev_amount<-Amount2-mean_amount
+
+m2<-sum(dev_amount^2)/n_amount
+
+m3<- abs(sum(dev_amount^3)/n_amount)
+cat("The abs(m3) is ", m3,  " > 0 and hence we can use Doane's rule ", '\n')
+
+c1<-m3/sqrt(m2*m2*m2)
+c1<-c1*sqrt((n_amount+1)*(n_amount+3)/(6.*(n_amount-2.)))
+emdoane<-ceiling(1+(log(n_amount)+log(1+c1))/log(2))
+incdoane<-(max(Amount2)-min(Amount2))/emdoane
+brkdoane<-min(Amount2)+(0:emdoane)*incdoane
+hist(Amount2,breaks=brkdoane,freq=FALSE,main=NULL,xlab="Amount",
+     xaxt="n",xlim=c(4.8,6),ylab="Relative Frequency",ylim=c(0,2))
+axis(1,at=(0:7),labels=c("0","1","2","3","4","5","6","7"))
+text(x=2,y=1,labels="Doane's Rule",pos=2)
+```
+
+- Histogram plot for Cavendish’s estimates for the density of the earth in Table 5.5. using absolute value of m3 in the Doane's rule. 
+- How about using a different rule for the same estimates as shown below? 
+
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+# Sturges' Rule
+em<-ceiling(1+log(length(density))/log(2.))
+incsturges<-(max(density)-min(density))/em
+brksturges<-min(density)+(0:em)*incsturges
+hist(density,breaks=brksturges,freq=TRUE,main=NULL,xlab="Density of the Earth", xlim=c(4.8,6),xaxt="n",ylab="Frequency",ylim=c(0,10))
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+text(x=1400,y=0.0035,labels="Sturges' Rule",pos=2)
+```
+
+-  Histogram plot for Cavendish’s estimates for the density of the earth in Table5.5. using the Sturges rule. 
+- The plot by the Sturges' rule has a little show of skewness to left but not as obvious as seen in the previous plot. 
+
+
+**b)** Using the sample mean and sample variance, fit a normal curve to Cavendish’s data and add this to your histogram of part (a). Compare the fit of the normal curve and Pearson’s curve to the histogram.
+
+```{r}
+mean_amount<-mean(Amount2)
+n_amount<-length(Amount2)
+dev_amount<-Amount2-mean_amount
+
+m2<-sum(dev_amount^2)/n_amount
+
+m3<- abs(sum(dev_amount^3)/n_amount)
+
+c1<-m3/sqrt(m2*m2*m2)
+c1<-c1*sqrt((n_amount+1)*(n_amount+3)/(6.*(n_amount-2.)))
+emdoane<-ceiling(1+(log(n_amount)+log(1+c1))/log(2))
+incdoane<-(max(Amount2)-min(Amount2))/emdoane
+brkdoane<-min(Amount2)+(0:emdoane)*incdoane
+hist(Amount2,breaks=brkdoane,freq=FALSE,main=NULL,xlab="Amount",
+     xaxt="n",xlim=c(4.8,6),ylab="Relative Frequency",ylim=c(0,2))
+axis(1,at=(0:7),labels=c("0","1","2","3","4","5","6","7"))
+text(x=2,y=1,labels="Doane's Rule",pos=2)
+
+
+curve(dnorm(x, mean=mean(density), sd=sd(density)),
+      add=TRUE,lwd=2.0)
+```
+
+- Histogram with the Doane's rule and normal curve. 
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+# Sturges' Rule
+#
+em<-ceiling(1+log(length(density))/log(2.))
+incsturges<-(max(density)-min(density))/em
+brksturges<-min(density)+(0:em)*incsturges
+h_1<-hist(density,breaks=brksturges,freq=TRUE,main=NULL,xlab="Density of the Earth",
+xlim=c(4.8,6),xaxt="n",ylab="Frequency",ylim=c(0,10))
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+text(x=10,y=0.0035,labels="Sturges' Rule",pos=2)
+
+
+xfit<-seq(4.8,6.0,length=50)
+yfit<-dnorm(xfit,mean=mean(density),sd=sd(density))
+yfit <- yfit*diff(h_1$mids[1:2])*length(density)
+lines(xfit, yfit, col="black", lwd=2)
+```
+
+- Histogram with the Sturge's rule and normal curve. 
+
+
+**Pearson's curve**
+
+```{r}
+# Nomogram for Pearson's curves with data point
+
+plot(c(0,2),c(0,9),type="n",xlim=c(0,2),
+ylim=c(1,9),xlab=expression(beta [1]),
+ylab=" ",xaxt="n",yaxt="n")
+#
+lines(c(0,0,2,2,0),c(1,9,9,1,1))
+for (i in 1:3) segments(0,2*i+1,2,2*i+1,lty=2)
+for (i in 1:3) segments(i/2,1,i/2,9,lty=2)
+#
+curve(1+x,from=0,to=2,add=TRUE)
+#
+symbols(x=1.6,y=1.5,
+rectangles=matrix(c(0.75,0.45),byrow=TRUE,
+ncol=2,nrow=1),inches=FALSE,bg="white",
+fg="white",add=TRUE)
+text(1.6,1.5,"No distributions")
+#
+curve(3*x/2+3,from=0,to=2,add=TRUE)
+#
+symbols(1.1,4.625,circles=0.07,inches=FALSE,
+bg="white",add=TRUE)
+text(1.1,4.65,labels="III")
+#
+pcb<-function(x){
+x^2/64+39*x/32+105/64 + 
+sqrt(x^4+156*x^3+1686*x^2+7154*x+11025)/64
+}
+curve(pcb,from=0,to=2,add=TRUE)
+#
+symbols(1.4,5.835,circles=0.07,
+inches=FALSE,bg="white",add=TRUE)
+text(1.4,5.837,labels="V")
+#
+text(1.75,6.05,labels="VI")
+#
+curve(15*x/8+9/2,from=0,to=2,add=TRUE)
+#
+symbols(x=0.5,y=8.5,
+rectangles=matrix(c(0.9,0.45),
+byrow=TRUE,ncol=2,nrow=1),inches=FALSE,bg="white",
+fg="white",add=TRUE)
+text(0.5,8.5,"No Pearson curves")
+#
+text(1.875,7.383,"IV")
+text(1.15,6.023,"IV")
+text(0.425,4.664,"IV")
+#
+axis(1,at=0.5*(0:4),tick=FALSE,col="white")
+#
+axis(2,at=c(1,3,5,7,9),
+labels=c("1.0","3.0","5.0","7.0","9.0"),
+las=1,tick=FALSE,col="white")
+mtext(expression(beta [2]),side=2,line=3,las=1)
+#
+symbols(0,3,squares=0.1,inches=FALSE,bg="white",
+add=TRUE)
+text(0,3,labels="G")
+#
+symbols(0.,1.975,circles=0.07,inches=FALSE,
+bg="white",add=TRUE)
+text(0.,2.,labels="II")
+#
+symbols(0,3.825,circles=0.08,inches=FALSE,
+bg="white",add=TRUE)
+text(0,3.825,labels="VII")
+#
+text(1.625,4.125,labels="I")
+text(1.125,3.375,labels="I")
+text(0.625,2.625,labels="I")
+#
+points(0,4.35,pch=24,bg="black")
+points(0,3.35,pch=25,bg="black")
+#
+points(0,2.65,pch=24,bg="black")
+points(0,1.15,pch=25,bg="black")
+#
+# Estimate of skewness and kurtosis for density data
+#
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+n<-length(density)
+diff<-density-mean(density)
+diff2<-diff*diff
+nm2<-sum(diff2)/n
+nm3<-sum(diff*diff2)/n
+nm4<-sum(diff2*diff2)/n
+beta1<-nm3*nm3/(nm2*nm2*nm2)
+beta2<-nm4/(nm2*nm2)
+#
+points(beta1,beta2,pch=19)
+```
+
+- Nomogram for Pearson Curves
+
+```{r}
+cat("Beta_1 = ", beta1, "\n", "Beta_1 = ", beta2, "\n")
+```
+
+
+- The Pearson curve fall in the area of the distribution I that is a beta distribution Even though the point is close to the Gaussian distribution, it is not on the point G on the monogram. The point \(\beta_1 = 0.1962617, \beta_2= 3.096259\) in the pearson's curve show that the point falls in the type I region and also close to the line of type III. So, both of these types can be used to show the distribution of the data.
+- However, the normal curve does emulate the distribution of the data well in the histogram plot which almost depicts normality however a further analysis for normality test may need be consider to establish that fact. 
+
+
+### Problem 6
+
+**Produce a histogram for Cavendish’s estimates of the density of the earth relative to water. Use Scott’s Rule to determine the uniform class width.**
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+incscott<-3.49*sd(density)/(length(density))^(1/3)
+emscott<-ceiling((max(density)-min(density))/incscott)
+brkscott<-min(density)+(0:emscott)*incscott
+hist(density,breaks=brkscott,freq=TRUE,main=NULL,xlab="Density",xlim=c(4.8,6),
+xaxt="n",ylab="Frequency",ylim=c(0,15))
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+text(x=1400,y=0.0035,labels="Scott's Rule",pos=2)
+```
+
+
+- Histogram of Density of Earth data using Scott's rule. 
+
+
+**b)** Fit a Gram-Charlier expansion of type A to the data to fourth order. Report the estimates of the third- and fourth-order central moments.
+
+```{r}
+
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+# Fit and plot a Gram-Charlier series of type A
+#
+n<-length(density)
+m_density<-mean(density)
+sd_density<-sd(density)
+zed<-(density-m_density)/sd(density)
+zed_t<-zed*zed*zed
+z_m3<-sum(zed_t)/n
+zed_t<-zed_t*zed
+z_m4<-sum(zed_t)/n
+z_m2<-sum(zed*zed)/n
+#
+c3<-z_m3/6
+c4<-(z_m4-3)/24
+
+
+#
+phix<-function(x,meanx,sdx){dnorm((x-meanx)/sdx)/sdx}
+#
+H3<-function(x,meanx,sdx) {
+z<-(x-meanx)/sdx
+z*(z*z-3)*dnorm(z)/sdx
+}
+#
+H4<-function(x,meanx,sdx) {
+z<-(x-meanx)/sdx
+(z*z*(z*z-6)+3)*dnorm(z)/sdx
+}
+GCA<-function(x,meanx,sdx,c3,c4) {
+z<-(x-meanx)/sdx
+dnorm(z)/sdx+c3*H3(x,meanx,sdx)+c4*H4(x,meanx,sdx)
+}
+
+cat("The value of z.m3         is ", z_m3, '\n')
+cat("The value of z.m4          is ", z_m4, '\n')
+
+```
+
+
+- The third moment is -0.4202985
+
+- The fourth moment is 2.886406
+
+
+**c.)** Plot the Gram-Charlier expansion you obtained in part (b) on the histogram of part (a).
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+
+incscott<-3.49*sd(density)/(length(density))^(1/3)
+
+emscott<-ceiling((max(density)-min(density))/incscott)
+
+brkscott<-min(density)+(0:emscott)*incscott
+hist(density,breaks=brkscott,freq=FALSE,main=NULL,
+     xlab="Density of the Earth relative to water",
+     xlim=c(4.8,6.2),
+     xaxt="n",ylab="Relative Frequency",
+     ylim=c(0,2))
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+text(x=6.2,y=1.5,labels="Scott's Rule",pos=2)
+
+curve(GCA(x,mean(density),sd(density),c3,c4), add=TRUE, col='black')
+
+
+```
+
+
+**d. Add a parametric normal approximation to the histogram of part (a). Is there much difference between the normal curve and the Gram-Charlier expansion? Comment.**
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+
+incscott<-3.49*sd(density)/(length(density))^(1/3)
+
+emscott<-ceiling((max(density)-min(density))/incscott)
+
+brkscott<-min(density)+(0:emscott)*incscott
+hist(density,breaks=brkscott,freq=FALSE,main=NULL,
+     xlab="Density of the Earth relative to water",
+     xlim=c(4.8,6.2),
+     xaxt="n",ylab="Relative Frequency",
+     ylim=c(0,2))
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+text(x=6.2,y=1.5,labels="Scott's Rule",pos=2)
+
+
+curve(dnorm(x, mean(density), sd(density)), add = TRUE)
+```
+
+
+- There is no difference between the normal approximation curve and the Gram-Chalier extension. Both of the curves looks the same actually.
+
+
+**e. Add the third- and fourth-order components of the Gram-Charlier expansion to the histogram of part (a). Do either of these two terms add much to the Gram-Charlier expansion? Comment.**
+
+
+```{r}
+density <- c(5.5,5.36,5.62,5.27,5.46,5.61,5.29,5.29,
+             5.39,5.3,4.88,5.58,5.44,5.42,5.75,5.07,
+             5.65,5.34,5.47,5.68,5.26,5.57,5.79,5.63,
+             5.85,5.55,5.53,5.1,5.34)
+
+incscott<-3.49*sd(density)/(length(density))^(1/3)
+emscott<-ceiling((max(density)-min(density))/incscott)
+
+brkscott<-min(density)+(0:emscott)*incscott
+hist(density,breaks=brkscott,freq=FALSE,main=NULL,
+     xlab="Density of the Earth relative to water",xlim=c(4.8,6.2),xaxt="n",
+     ylab="Relative Frequency",ylim=c(-0.2,2),col = "grey")
+
+axis(1,at=seq(4.8,6,0.2),labels=c("4.8","5.0","5.2","5.4","5.6","5.8","6.0"))
+
+text(x=5.2,y=2,labels="Scott's Rule",pos=2)
+
+curve(GCA(x,mean(density),sd(density),c3,c4), add = TRUE,from=4.88,to=5.90,lty=1,lwd=3)
+curve(c3*H3(x,mean(density),sd(density))    ,add = TRUE,from=4.88,to=5.90,lty=2,lwd=3, col='red')
+curve(c4*H4(x,mean(density),sd(density))    ,add = TRUE,from=4.88,to=5.90,lty=3,lwd=3, col='blue') 
+legend(x=5.8,y=2,legend=c("Gram-Charlier",
+expression(mu*"*"[3]~H[3]/6),expression(mu*"*"[4]~H[4]/24)),
+lty=c(1,2,3,4),lwd=c(1.5,1.5,1.5,1.5))
+
+```
+
+
+**Gram-Charlier with third and fourth order components**
+
+The third and fourth orderapproximation does not seem to add much to the Gram-Charlier expansion. But the skewness has a little bit more impact on the fourth order Gram-Charlier expansion than the kurtosis. Generally the graph is not very intuitive with the additional third and forth order but the normal curve or the first order of Gram-Charlier can show the distribution correctly.
+
+
+**Problem 7**
+
+**Produce a normal quantile-quantile plot for total compensation.**
+
+```{r}
+amount<-c(11.73,6.70660,7.56180,7.7738,5.825,7.121,15.6062,
+        12.0133,10.7677,7.0903,4.3673,14.3879,6.5997,6.38,
+        6.0286,10.7058,17.558,4.9357,9.6019,14.309,9.3458,
+        10.1015,4.8093,6.4407,12.3189,17.8454,10.326,2.2113,
+        5.5036,6.5355,11.893,3.109,5.5714,10.8262,5.9958,
+        4.2912,2.0294,8.0771,5.3107,9.252,9.1823,5.2043,6.0456)
+
+
+qqnorm(amount,ylab = "Compensation(Millions of Dollars)", xlab = "Theoretical Quantiles", plot.it = TRUE, datax = FALSE)
+
+
+qqline(amount, datax = FALSE)
+```
+
+
+- No. The data does not seem to be normally distributed because there is some skewness. The slope of the residuals increases faster from left to right indicating skewness. It is also evidently noted that majority of the points do not fall on the theoretical normal line.
+
+
+**b.Produce a normal quantile-quantile plot of the transformed data.**
+
+```{r}
+amount<-c(11.73,6.70660,7.56180,7.7738,5.825,7.121,15.6062,
+        12.0133,10.7677,7.0903,4.3673,14.3879,6.5997,6.38,
+        6.0286,10.7058,17.558,4.9357,9.6019,14.309,9.3458,
+        10.1015,4.8093,6.4407,12.3189,17.8454,10.326,2.2113,
+        5.5036,6.5355,11.893,3.109,5.5714,10.8262,5.9958,
+        4.2912,2.0294,8.0771,5.3107,9.252,9.1823,5.2043,6.0456)
+
+sq_amount <- sqrt(amount)
+
+
+qqnorm(sq_amount,ylab = "Square Root of Compensation", xlab = "Theoretical Quantiles", plot.it = TRUE, datax = FALSE)
+
+
+qqline(sq_amount, datax = FALSE)
+```
+
+
+- Visually observing the plot it can be seen that now majority of the points are much closer to the line and most as well on the line. So I typically would say say data is close to normal distribution. However, just by observation might not be enough for better conclusion a further hypothesis would help as in (c) below.
+
+
+**c)** Compare the two quantile-quantile plots for total compensation from your answers to parts (a) and (b). Which appears to be more normal: the original data or the data after a square root transformation? Justify your answer.** 
+
+- Juxtaposing between the two Q-Q plots, would say, the data of the square root transformation is more normally distributed than that of the original data because from their  quantile quantile plots, the points of the square root transformation lies very close to the line and and there seem to be very little skewness in that.
+
+
+**d)** Goodness of fit test
+
+```{r}
+require("nortest")
+shapiro.test(amount)
+shapiro.test(sq_amount)
+```
+
+
+#### We willl test the following normality hypothesis for alpha = 0.05, that is, 95% confidence level:
+
+- $H_0:$ Data is normally distributed
+- $H_1:$ Data is not normally distributed
+
+
+#### Conclusions 
+
+- From the results above, we will reject the null hypothesis for the original data and say that since its p-value is less than $0.05$, there is enough evidence to establish that the data is not normally distributed.
+
+- Regarding the transformed data, we will fail to reject the null hypothesis for $\alpha > 0.05$ and conclude that there's not enough evidence in the data to establish that the data is not normally distributed.
+
+- Overall, the results above shows that the transformed data follow more closely to normal than the original data. There other transformations methods like the log transform, box-cox to also measure how small or large the p-value would be for such transformations to establish which method is more effective in approximating normality for the original data. 
+
+
+
