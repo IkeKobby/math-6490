@@ -1,0 +1,214 @@
+---
+title: "Homework-11"
+author: "Isaac Kobby Anni"
+date: "2024-11-08"
+output: html_document
+---
+
+<hr style=" height:4px; width:90%; border:3px soid red; border-radius:12px; background-color: black">
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(caret)
+library(ggplot2)
+```
+
+```{r}
+# data 
+data_col <- read.csv("/Users/ika/Desktop/Fall 2024/MATH 6490/ika/final-project/urine_characteristics.csv")
+data <- read.table("T44.1")[,4:11]
+colnames(data) <- colnames(data_col)
+
+head(data)
+```
+
+```{r}
+str(data$Crystals)
+```
+
+
+```{r}
+as.data.frame(table(data$Crystals))
+```
+```{r}
+# Use only sample with "no crystals"
+subset_data <- data[data$Crystals == 1, ]
+str(subset_data) # we expect 45 observations. only
+```
+
+```{r}
+sapply(subset_data, function(x) sum(is.nan(x)))
+```
+- Data shows there's no `nan` although we see from the picture that `nMho` has its first record as dash. However, since this variable will not be used in our regression fit there's no need to worry about it for now.
+
+## Let's check the relationship between `Urea concentration` and `Calcium`
+```{r}
+ggplot(subset_data, aes(x=Calcium, y=Urea,)) +
+  geom_point(size=3, alpha=0.7) +
+  labs(title="Urea concentration vs. Calcium",
+       x="Calcium", y="Urea concentration") +
+  theme_minimal()
+```
+
+- The plot seems to show this upward trend indicating the presence of a positive correlation between the urea concentration and calcium. We would be hopeful that our regression model will find this trend and best fit. 
+
+<hr style=" height:4px; width:90%; border:3px soid red; border-radius:12px; background-color: black">
+
+### Problem 8 
+
+**a)** Model urea concentration as a simple linear function of calcium concentration. Report the estimates and two-sided p-values for the regression coefficients.
+```{r}
+simple_linear_regression <- lm(Urea ~ Calcium, data = subset_data)
+summary(simple_linear_regression)
+```
+
+- This simple linear regression model output shows a statistically significant positive relationship between `Calcium` and `Urea concentration` levels, with a `p-value = 0.00205` indicating that Calcium is a significant predictor. However, the low `R-squared value (0.2003)` suggests that Calcium alone explains only a small portion of the variability in Urea with no crystals. Thus, while Calcium contributes to the prediction of Urea, `other variables` may also need to be considered to improve the model’s explanatory power. The residual standard error (111 which seem big as we exoect this error close to zero as much as possible) and the range of residuals further indicate variability in Urea levels that is not fully explained by this simple linear model. 
+
+```{r}
+library(kableExtra)
+regression_coefficients <- data.frame(
+  Regression.Coefficients = c("$\\beta_{0}$" , "$\\beta_{1}$"),
+  Estimates = c("$159.717$" , "$29.485$"),
+  Two.Sides.P.Values = c("1.68e-06", "$0.00205$")
+)
+
+knitr::kable(regression_coefficients)
+```
+
+**b)** Produce a scatterplot with the least-squares regression line. Be sure the fitted line is banked to 45 as recommended by Cleveland [22]. 
+ 
+```{r}
+slope <- coef(simple_linear_regression)[2]
+ggplot(data = subset_data, aes(x = Calcium*10, y = Urea)) +
+  geom_point(color = "black", size = 3, alpha = 0.6) +  # Adjust point size and add transparency
+  geom_smooth(method = "lm", se = FALSE, color = "darkred", size = 1.2) +  # Thicker regression line
+  theme_minimal(base_size = 14) + 
+  labs(
+    title = "Scatterplot with Least-Squares Regression Line",
+    subtitle = "Banked to 45 Degrees",
+    x = "Calcium scaled by x10",
+    y = "Urea"
+  ) +
+  #xlim(0, 100) + 
+  #ylim(50, 650) +
+  scale_y_continuous(breaks = seq(50, 650, by = 50)) +
+  theme(
+    plot.title = element_text(hjust = 0.3, size = 12),
+    plot.subtitle = element_text(hjust = 0.4, size = 12),
+    axis.title = element_text(face = "bold")
+  )
+  #coord_fixed(ratio = 1 / abs(slope))
+```
+
+- The regression line shows a slight positive slope, indicating a positive relationship between Calcium and Urea. This suggests that as Calcium levels increase, Urea levels tend to increase as well, though the relationship appears to be relatively weak.
+
+<hr style=" height:4px; width:90%; border:3px soid red; border-radius:12px; background-color: black">
+
+**c)** Conduct a residual analysis. Report your conclusions in 250 words or less with accompanying graphical displays.
+```{r}
+## Check for independence of random error
+row_num <- c(1:nrow(subset_data))
+sort_x <- sort(subset_data$Calcium, index.return = TRUE)
+plot(row_num, simple_linear_regression$residuals[sort_x$ix],
+     main = "Check for independence \n Residuals sorted by Calcium")
+abline(h=0)
+```
+
+- Ideally if the residuals are independent, we expect to see a random scatter of points around the horizontal line at y = 0, without any apparent pattern. In this plot, the residuals appear randomly scattered, though there are a few sections where points are either predominantly above or below the zero line. However, there’s no clear trend (like a wave or cycle), which would suggest serial correlation. The residuals seem mostly randomly distributed around the zero line, suggesting that the independence assumption is likely met.
+- The lack of a systematic pattern (upward, downward, or cyclic trend) supports that the errors are independent.
+
+```{r}
+plot(simple_linear_regression$fitted.values, simple_linear_regression$residuals,
+     main = "Check for 0 mean and constant variance \n Residuals vs fitted value")
+abline(h=0)
+```
+
+- The residuals should be centered around zero. This means that the linear model does not systematically under- or over-predict the values. The plot does not show a clear, consistent spread of residuals across the fitted values. However, there might be a slight increase in residual spread as the fitted values increase, particularly with some large residuals toward the beginning of left and even far right. 
+- Although it’s not very pronounced, the slight increase in spread toward the higher fitted values suggests a possible mild heteroscedasticity. This could imply that the variability of the residuals might be dependent on the fitted values, which can affect the reliability of confidence intervals and hypothesis tests.
+
+```{r}
+# Check for normality of random error
+qqnorm(simple_linear_regression$residuals)
+qqline(simple_linear_regression$residuals)
+```
+ 
+- If the residuals are normally distributed, the points should fall approximately along the reference line (the 45-degree line). In this plot, most of the residuals lie close to the line in the center of the distribution (between approximately -1 and 1 on the theoretical quantiles). This indicates that the central portion of the residuals is roughly normal.
+- However, at both tails (left and right ends), there are deviations from the line. The points at the extreme ends are either above or below the line, indicating heavier tails or outliers in the distribution of residuals.
+```{r}
+shapiro.test(simple_linear_regression$residuals)
+```
+$H_0$: Residuals are normally distributed. \
+$H_1$: Residuals are not normally distributed. 
+
+- The test statistic, $W = 0.97297$, is close to 1. In a Shapiro-Wilk test, a value of W close to 1 suggests that the residuals is likely to be normally distributed.
+- $p-value = 0.3694:$ This p-value is greater than the typical significance level (e.g., 0.05).
+- Since the p-value is above `0.05`, we fail to reject the null hypothesis. This means there is not enough evidence to conclude that the residuals deviate from normality.
+- Normality Assumption: The Shapiro-Wilk test suggests that the residuals are not significantly different from a normal distribution at the 5% significance level.
+
+<hr style=" height:4px; width:90%; border:3px soid red; border-radius:12px; background-color: black">
+
+### Problem 9.  Refer to the previous exercise.
+**a)** Conduct a diagnostic analysis of the influence measures. Report your conclusions in
+250 words or less with accompanying graphical displays
+```{r}
+k=1
+n = length(subset_data$Calcium)
+```
+
+```{r}
+### Use difference in fits (dffits)
+d <- dffits(simple_linear_regression) #influential if abs(dffits) > 2*sqrt((k+2)/(n-k-2))
+which(abs(d) > 2*sqrt((k+2)/(n-k-2)))
+row_num <- c(1:n)
+plot(c(1,n), c(-9, 1),  xlab = "row number",
+     ylab = "deffits", 
+     main = "Identification of influential points", type = "n")
+points(row_num, d)
+abline(h = 2*sqrt((k+2)/(n-k-2)))
+abline(h = - 2*sqrt((k+2)/(n-k-2)))
+```
+
+- A commonly used threshold for identifying influential points with DFFITS is $threshold = 2 \sqrt(\frac{p}{n})$, where $p$ is the number of predictors and $n$ is the sample size. Points with DFFITS values greater than this threshold (either positive or negative) are considered influential
+- In this plot, most of the points are clustered around zero, suggesting that they are not highly influential.
+- There is one point above the upper threshold that might induce an inflential point and  one point that is significantly below zero, with a DFFITS value around -1. This point is likely an influential observation as it deviates notably from the rest.
+
+```{r}
+### Use Cook's distance (cooks.distance)
+cd <- cooks.distance(simple_linear_regression) #influential if d > 1
+which(cd > 1)
+row_num <- c(1:n)
+plot(row_num, cd, xlab = "row number",
+     ylab = "Cook's distance", 
+     main = "Identification of influential points")
+abline(h = 1)
+```
+
+- A common rule of thumb is that a point with Cook's distance greater than 1 is considered influential and may have a disproportionate effect on the model's fit. However, in smaller datasets, values above $\frac{4}{n - k - 1}$ (where $n$ is number of observation and $k$ is the number of predictors. 
+- In this plot, there is only one data point with a Cook's distance close to or equal to 1, which suggests there might not be enough influential points in this plot aside this point. 
+- The other points have very low Cook's distances, indicating that they do not individually exert a significant influence on the model.
+
+```{r}
+### Use COVRATIO (covratio)
+cv <- covratio(simple_linear_regression) #influential if covratio > 1 + 3*(k+1)/n OR covratio < 1 - 3*(k+1)/n
+which(cv > (1 + 3*(k+1)/n))
+which(cv < (1 - 3*(k+1)/n))
+row_num <- c(1:n)
+plot(row_num, cv, xlab = "row number",
+     ylab = "covratio", 
+     main = "Identification of influential points")
+abline(h = (1 + 3*(k+1)/n))
+abline(h = (1 - 3*(k+1)/n))
+```
+
+-  Most points are clustered close to 1, which suggests that most observations do not significantly affect the precision of the regression estimates. 
+- There are two points above 1.1 and two points below 0.9. These points may slightly influence the variance-covariance matrix of the model’s coefficients, although the impact does not appear extreme.
+
+<hr style=" height:4px; width:90%; border:3px soid red; border-radius:12px; background-color: black">
+
+**b)** Write a brief concluding paragraph summarizing both the residual and influence analyses.
+
+- In conclusion, the residual and influence analyses provide insights into the adequacy and robustness of the regression model. The residual diagnostics, including the independence and normality checks, suggest that the model's assumptions are largely met, with residuals centered around zero and showing minimal patterns, indicating a reasonable fit. However, there is some evidence of mild non-constant variance and slight deviations from normality in the residuals, which may impact the precision of inference but are not severe. The influence diagnostics, such as Cook's distance, DFFITS, and COVRATIO, identified a few observations with notable influence, affecting the model’s coefficients and precision to some extent. These influential points should be further investigated, as they may skew the model’s results. Overall, while the model appears adequate for analysis, additional robustness checks or transformations could improve reliability, especially concerning the influential points.

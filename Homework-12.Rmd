@@ -1,0 +1,219 @@
+---
+title: "Homework-12"
+author: "Isaac Kobby Anni"
+date: "2024-11-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Creating the data frame
+fatality_data <- data.frame(
+  Year = c(1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 
+           1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006),
+  Number_of_Fatalities = c(4063, 4283, 4154, 4238, 3963, 3690, 3501, 3615, 
+                           3263, 3351, 3062, 3033, 2911, 2984, 2927, 2776, 
+                           2932, 2768, 2722, 2905, 2889),
+  Licensed_Drivers = c(16226, 16927, 17155, 17592, 17718, 18090, 18465, 
+                       18843, 19243, 19327, 19964, 20148, 20744, 20934, 
+                       20593, 20879, 21163, 21436, 21673, 21937, 22278)
+)
+
+# Display the data
+print(fatality_data[, 1:2])
+```
+
+## Problem 4
+
+```{r}
+train_data <- data.frame(
+  Recoded_year = c(fatality_data$Year - 1985),
+  Fatalities = c(fatality_data$Number_of_Fatalities)
+)
+print(train_data)
+```
+
+
+### a) Create a scatterplot of the fatalities versus year. Add a LOWESS curve to the scatterplot.
+```{r}
+plot(train_data$Recoded_year,
+     train_data$Fatalities,
+     main = "Scatter plot of the number of fatalities with LOWESS curve",
+     ylab="Number of Fatalities", 
+     xlab="Year",ylim = c(2500, 4500), xlim=c(0,25), 
+     las=1,cex=0.85,
+     pch = 19
+     )
+lines(lowess(train_data$Recoded_year,train_data$Fatalities,delta=0))
+```
+
+
+### b) Fit a fourth-degree polynomial regression model. Summarize the results.
+
+```{r}
+# Fit a 4th-degree polynomial regression model
+model <- lm(Fatalities ~ poly(Recoded_year, 4), data = train_data)
+
+# Summarize the model
+summary(model)
+```
+
+
+### c) Perform a complete diagnostic analysis. Summarize the results.
+```{r}
+## Check for independence of random error
+row_num <- c(1:nrow(train_data))
+sort_x <- sort(train_data$Recoded_year, index.return = TRUE)
+plot(row_num, model$residuals[sort_x$ix],
+     main = "Check for independence \n Residuals sorted by number of year")
+abline(h=0)
+```
+
+
+- **Independence**: The residuals appear to be randomly distributed with no obvious patterns or trends over the sorted order of years. This indicates that the residuals are likely independent of each other.
+- **Lack of Serial Correlation**: There is no evidence of a systematic pattern (e.g., cyclical or linear trend) in the residuals. This supports the assumption of no autocorrelation in the residuals. 
+
+```{r}
+plot(model$fitted.values, model$residuals,
+     main = "Check for 0 mean and constant variance \n Residuals vs fitted value")
+abline(h=0)
+```
+
+
+- **Mean Zero**: The residuals appear to be centered around the horizontal line at zero, indicating that the residuals have a mean close to zero. This satisfies one assumption of regression.
+- **Constant Variance (Homoscedasticity)**: The spread of residuals does not seem to exhibit a clear funnel shape (increasing or decreasing variance), though there might be a slight pattern or clustering. This suggests that the constant variance assumption is likely met, but further tests might confirm it.
+
+```{r}
+# Check for normality of random error
+qqnorm(model$residuals)
+qqline(model$residuals)
+```
+
+- The points generally follow the diagonal line, indicating that the residuals are approximately normally distributed. However, there are slight deviations in the tails, suggesting potential mild departures from normality. Overall, this indicates that the assumption of normally distributed residuals is reasonable for this model, but further diagnostic checks may be warranted to confirm.
+
+```{r}
+shapiro.test(model$residuals)
+```
+$H_0$: Residuals are normally distributed. \
+$H_1$: Residuals are not normally distributed. 
+
+- The test statistic, $W = 0.95672$, is close to 1. In a Shapiro-Wilk test, a value of W close to 1 suggests that the residuals is likely to be normally distributed.
+- $p-value = 0.4528:$ This p-value is greater than the typical significance level (e.g., 0.05).
+- Since the p-value is above `0.05`, we fail to reject the null hypothesis. This means there is not enough evidence to conclude that the residuals deviate from normality.
+- Normality Assumption: The Shapiro-Wilk test suggests that the residuals are not significantly different from a normal distribution at the 5% significance level.
+
+### Summarize the results.
+- The residual analysis indicates that the assumptions of normality, constant variance, and independence are reasonably satisfied for the fourth-degree polynomial regression model. Minor deviations observed are unlikely to significantly impact the validity of the model's results.
+
+### d) Based upon your answers to parts (a) and (b), does the quartic polynomial regression model explain the pattern in the numbers of fatalities? Is it possible to use instead a polynomial regression model of lower degree?
+- To answer this based of just part `a` and `b`, it will suffice to have a prediction of the 4th polynomial visualized to see how the prediction follows the actual data. Of course, without residual analyses to justify the model's assumption, we can use visualization intuitively to infer the model's performance. 
+
+#### Visualize the fit
+```{r}
+library(ggplot2)
+
+# Create a data frame for predictions
+prediction_data <- data.frame(
+  Recoded_year = seq(min(train_data$Recoded_year), max(train_data$Recoded_year), length.out = 100)
+)
+
+# Add predicted values to the data frame
+prediction_data$Predicted_Fatalities <- predict(model, newdata = prediction_data)
+
+# Plot the original data and the polynomial fit with a legend
+ggplot() +
+  geom_point(data = train_data, aes(x = Recoded_year, y = Fatalities, color = "Actual Data"), size = 2) +
+  geom_line(data = prediction_data, aes(x = Recoded_year, y = Predicted_Fatalities, color = "Fitted Line"), size = 1) +
+  labs(
+    title = "4th-Degree Polynomial Regression",
+    x = "Num of Year",
+    y = "Number of Fatalities",
+    color = "Legend"
+  ) +
+  scale_color_manual(values = c("Actual Data" = "blue", "Fitted Line" = "red")) +
+  theme_minimal()
+```
+
+
+- Based on this plot, the quartic polynomial regression model is justified for capturing the observed pattern. However, statistical tests such as the adjusted $R^2_{Adjusted}$, $AIC$ criteria, or an $ANOVA$ test comparing models of different degrees could confirm if a lower-degree polynomial suffices without sacrificing model performance.
+
+## Problem 8
+```{r}
+fatality_rate_index <- data.frame(
+  recoded_year = c(fatality_data$Year - 1985),
+  rate = c(fatality_data$Number_of_Fatalities / fatality_data$Licensed_Drivers)
+)
+print(fatality_rate_index)
+```
+
+
+### a) Create a scatterplot of the fatalities versus year.
+```{r}
+plot(fatality_rate_index$recoded_year,
+     fatality_rate_index$rate,
+     main = "Scatter plot of the rate of fatalities",
+     ylab="Fatality Rate", 
+     xlab="Number of Year",ylim=c(min(fatality_rate_index$rate),max(fatality_rate_index$rate)),
+     xlim=c(1,25), 
+     las=1,cex=0.5)
+```
+
+
+### b)  Add a LOWESS curve to the scatterplot of part (a)
+```{r}
+plot(fatality_rate_index$recoded_year,
+     fatality_rate_index$rate,
+     main = "Scatter plot of the rate of fatalities with LOWESS curve",
+     ylab="Fatality Rate", 
+     xlab="Number of Year",ylim=c(min(fatality_rate_index$rate),max(fatality_rate_index$rate)),
+     xlim=c(1,25), 
+     las=1,cex=0.5)
+lines(lowess(fatality_rate_index$recoded_year,fatality_rate_index$rate,delta=0))
+```
+
+
+### c) For each year in Table 12.2 starting with 1990, calculate a 5-year moving average using the year and the previous four. Plot this moving average on the scatterplot of part (a) and connect the points with a spline function.
+```{r}
+library(zoo)
+
+# Calculate Fatality Rate and Moving Average
+fatality_data$Fatality_Rate <- fatality_data$Number_of_Fatalities / fatality_data$Licensed_Drivers
+fatality_data$Moving_Avg <- zoo::rollmean(fatality_data$Fatality_Rate, 5, fill = NA, align = "right")
+
+# Plot the Scatter Plot
+plot(fatality_data$Year,
+     fatality_data$Fatality_Rate,
+     main = "Fatality Rate with 5-Year MA and LOWESS Curve",
+     ylab = "Fatality Rate",
+     xlab = "Year",
+     ylim = c(min(fatality_data$Fatality_Rate, na.rm = TRUE), max(fatality_data$Fatality_Rate, na.rm = TRUE)),
+     xlim = c(min(fatality_data$Year), max(fatality_data$Year)),
+     las = 1, cex = 0.5, pch = 16, col = "blue")
+
+# Add Moving Average Points
+points(fatality_data$Year, fatality_data$Moving_Avg, col = "red", pch = 16, cex = 0.7)
+
+# Connect the Moving Average Points with a Spline Function
+lines(spline(fatality_data$Year[!is.na(fatality_data$Moving_Avg)], fatality_data$Moving_Avg[!is.na(fatality_data$Moving_Avg)]),
+      col = "darkred", lwd = 2)
+
+# Add LOWESS Curve
+lowess_curve <- lowess(fatality_data$Year, fatality_data$Fatality_Rate, f = 0.3)
+lines(lowess_curve, col = "orange3", lwd = 2)
+
+# Add Legend
+legend("topright", legend = c("Fatality Rate", "MA", "Spline fit", "LOWESS Curve"),
+       col = c("blue", "red", "darkred", "orange3"), lty = c(NA, NA, 1, 1), pch = c(16, 16, NA, NA),
+       lwd = c(NA,NA, 2, 2), bty = "n")
+```
+
+### d) How does the spline function fitted to the moving average perform compared to the LOWESS curve?
+- The spline function provides a smooth and structured representation of the trend but depends on the pre-processed moving average values, which might obscure some detailed variations.
+- The LOWESS curve tends to perform better for exploratory purposes because it directly utilizes raw data points, allowing for a potentially more nuanced representation of the underlying pattern.
+- Visually, the LOWESS curve may capture smaller-scale changes more effectively, whereas the spline function prioritizes adherence to the broader structure of the moving averages.
+- Overall, the LOWESS curve is typically more flexible and informative for identifying data trends, while the spline function is more constrained by the moving average preprocessing. 
+
+
