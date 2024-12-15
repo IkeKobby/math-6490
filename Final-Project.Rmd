@@ -1,0 +1,422 @@
+---
+title: "Final Project"
+author: "Isaac Kobby Anni"
+date: "2024-11-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+
+# the dataset
+data <- read.csv("Sleep_health_and_lifestyle_dataset.csv")
+```
+
+```{r}
+head(data)
+```
+
+
+```{r}
+library(tidyr)
+
+data <- data %>%
+  separate(Blood.Pressure, into = c("Systolic", "Diastolic"), sep = "/")
+
+data$Systolic <- as.numeric(data$Systolic)
+data$Diastolic <- as.numeric(data$Diastolic)
+
+data <- data %>%
+  mutate(BP.Category = case_when(
+    Systolic > 180 | Diastolic > 120 ~ 'Hypertensive Crisis',
+    Systolic >= 140 | Diastolic >= 90 ~ 'High Blood Pressure (Hypertension) Stage 2',
+    Systolic >= 130 & Systolic <= 139 | Diastolic >= 80 & Diastolic <= 89 ~ 'High Blood Pressure (Hypertension) Stage 1',
+    Systolic >= 120 & Systolic <= 129 & Diastolic < 80 ~ 'Elevated',
+    Systolic < 120 & Diastolic < 80 ~ 'Normal',
+    TRUE ~ 'Unknown'
+  ))
+
+
+data <- data %>%
+  mutate(BMI.Category = ifelse(BMI.Category == "Normal", "Normal Weight", BMI.Category))
+
+data <- data %>%
+  mutate(AgeGroup = cut(Age, breaks=c(20, 30, 40, 50, 60), labels=c("20-30", "30-40", "40-50", "50-60")))
+```
+
+
+```{r}
+colnames(data)
+```
+```{r}
+head(data)
+```
+```{r}
+write.csv(data,"/Users/ika/Desktop/Fall 2024/MATH 6490/ika/final-project/sleep-health.csv", row.names = FALSE)
+```
+
+
+```{r}
+nan_check <- sapply(data, function(x) sum(is.nan(x)))
+print("Number of NaN values in each column:")
+print(nan_check)
+```
+```{r}
+numeric_data <- data %>% select(where(is.numeric))
+
+#  descriptive statistics for each numeric column
+descriptive_stats <- numeric_data %>%
+  summarise(
+    count = sapply(numeric_data, function(x) sum(!is.na(x))),
+    mean = sapply(numeric_data, function(x) mean(x, na.rm = TRUE)),
+    std = sapply(numeric_data, function(x) sd(x, na.rm = TRUE)),
+    min = sapply(numeric_data, function(x) min(x, na.rm = TRUE)),
+    `25%` = sapply(numeric_data, function(x) quantile(x, 0.25, na.rm = TRUE)),
+    `50%` = sapply(numeric_data, function(x) median(x, na.rm = TRUE)),
+    `75%` = sapply(numeric_data, function(x) quantile(x, 0.75, na.rm = TRUE)),
+    max = sapply(numeric_data, function(x) max(x, na.rm = TRUE))
+  ) %>%
+  t() %>% 
+  as.data.frame()
+
+# Set column names to original variable names
+colnames(descriptive_stats) <- names(numeric_data)
+
+# Print the result in a clean format
+#print("Descriptive Statistics for Numeric Columns:")
+print(descriptive_stats)
+```
+
+
+### How does physical activity impact sleep quality?
+```{r}
+ggplot(data, aes(x=Physical.Activity.Level, y=Quality.of.Sleep, color=BMI.Category)) +
+  geom_point(size=3, alpha=0.7) +
+  labs(title="Physical Activity Level vs. Quality of Sleep by BMI Category",
+       x="Physical Activity Level (minutes/day)", y="Quality of Sleep (1-10)") +
+  theme_minimal()
+```
+
+- The plot reveals that individuals with higher physical activity levels tend to report better sleep quality across all BMI categories. Particularly, those classified as "Normal Weight" exhibit a wide range of physical activity and generally higher sleep quality scores.
+
+
+```{r}
+ggplot(data, aes(x=Quality.of.Sleep, y=Sleep.Duration)) +
+  geom_point(size=3, alpha=0.7) +
+  labs(title="Sleep Duration vs. Quality of Sleep",
+       x="Quality of Sleep", y="Sleep Duration") +
+  theme_minimal()
+```
+
+- It is noted that quality of sleep as a fuction of sleep duration is linear. Higher ratings corresponds with higher sleep duration. However, a regression model is like to find this pattern in case of prediction but it will be ideal to have a model that's ignorant of this quality of sleep but instead with other variables instead when considering recommendation that's more medically OPD (Out-patient-Diagnosis) based.
+
+### Is there a relationship between stress levels and blood pressure categories?
+```{r}
+ggplot(data, aes(x=BP.Category, y=Stress.Level, fill=BP.Category)) +
+  geom_boxplot() +
+  labs(title="Stress Level by Blood Pressure Category",
+       x="Blood Pressure Category", y="Stress Level (1-10)") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+- Stress levels are notably higher for individuals classified in "Hypertension Stage 2" compared to other categories. Elevated and normal blood pressure categories exhibit lower stress levels.
+
+### What is the distribution of sleep disorders across different BMI categories?
+```{r}
+ggplot(data, aes(x=BMI.Category, fill=Sleep.Disorder)) +
+  geom_bar(position="fill") +
+  labs(title="Distribution of Sleep Disorders by BMI Category",
+       x="BMI Category", y="Proportion") +
+  theme_minimal() +
+  scale_y_continuous(labels=scales::percent)
+```
+
+- Individuals classified as "Obese" and "Overweight" have a higher prevalence of sleep disorders such as Insomnia and Sleep Apnea, compared to those with a "Normal Weight."
+
+### Do people with higher physical activity levels have a lower heart rate?
+```{r}
+ggplot(data, aes(x=Physical.Activity.Level, y=Heart.Rate)) +
+  geom_point(color="black", size=3, alpha=0.7) +
+  geom_smooth(method="lm", color="red", se=FALSE) +
+  labs(title="Physical Activity Level vs. Heart Rate by Age Group",
+       x="Physical Activity Level (minutes/day)", 
+       y="Heart Rate (bpm)") +
+  theme_minimal() +
+  facet_wrap(~ AgeGroup)
+```
+
+- A slight trend is observed where increased physical activity levels are associated with lower resting heart rates. This suggests a correlation between active lifestyles and better cardiovascular health.
+
+### How does age affect sleep duration and quality?
+```{r}
+# First, categorize age groups
+data <- data %>%
+  mutate(AgeGroup = cut(Age, breaks=c(20, 30, 40, 50, 60), labels=c("20-30", "30-40", "40-50", "50-60")))
+
+# Sleep Duration Density Plot
+ggplot(data, aes(x=Sleep.Duration, fill=AgeGroup)) +
+  geom_density(alpha=0.5) +
+  labs(title="Sleep Duration by Age Group",
+       x="Sleep Duration (hours)", y="Density") +
+  facet_wrap(~AgeGroup) +
+  theme_minimal()
+
+# Quality of Sleep Density Plot
+ggplot(data, aes(x=Quality.of.Sleep, fill=AgeGroup)) +
+  geom_density(alpha=0.5) +
+  labs(title="Quality of Sleep by Age Group",
+       x="Quality of Sleep (1-10)", y="Density") +
+  facet_wrap(~AgeGroup) +
+  theme_minimal()
+```
+- Sleep duration patterns vary across age groups, with the 20-30 age group displaying a broad range, while the 50-60 group exhibits a narrower distribution centered around 7-8 hours.
+-  Quality of sleep varies with age; younger age groups tend to report higher sleep quality compared to older groups, potentially due to lifestyle factors.
+
+### What is the relationship between daily steps and blood pressure category?
+```{r}
+ggplot(data, aes(x=BP.Category, y=Daily.Steps, fill=BP.Category)) +
+  geom_boxplot() +
+  labs(title="Daily Steps by Blood Pressure Category",
+       x="Blood Pressure Category", y="Daily Steps") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+- Those in "Hypertension Stage 2" tend to have lower daily step counts, suggesting physical inactivity could be linked to high blood pressure.
+
+### Are there any gender differences in the prevalence of sleep disorders?
+```{r}
+ggplot(data, aes(x=Gender, fill=Sleep.Disorder)) +
+  geom_bar(position="fill") +
+  labs(title="Prevalence of Sleep Disorders by Gender",
+       x="Gender", y="Proportion") +
+  theme_minimal() +
+  scale_y_continuous(labels=scales::percent)
+```
+
+- Insomnia is more prevalent among females, while sleep apnea is slightly more common in males. Overall, sleep disorders affect both genders significantly.
+
+### Does sleep duration differ significantly across occupation groups?
+```{r}
+ggplot(data, aes(x=Occupation, y=Sleep.Duration, fill=Occupation)) +
+  geom_boxplot() +
+  labs(title="Sleep Duration by Occupation",
+       x="Occupation", y="Sleep Duration (hours)") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+### Compare the stress levels across different BMI categories.
+```{r}
+ggplot(data, aes(x=Stress.Level, fill=BMI.Category)) +
+  geom_density(alpha=0.5) +
+  labs(title="Density Plot of Stress Levels by BMI Category",
+       x="Stress Level (scale: 1-10)", y="Density") +
+  theme_minimal()
+```
+```{r}
+ggplot(data, aes(x=Stress.Level, fill=BMI.Category)) +
+  geom_histogram(aes(y=..density..), position="identity", alpha=0.3, binwidth=0.7, color="black") +
+  geom_density(alpha=0.5) +
+  labs(title="Histogram and Density Plot of Stress Levels by BMI Category",
+       x="Stress Level (scale: 1-10)", y="Density") +
+  theme_minimal()
+```
+
+```{r}
+# criteria for low physical activity and high sleep
+low_activity_threshold <- 40       # e.g., less than 30 minutes per day
+high_sleep_threshold <- 6          # e.g., more than 8 hours per day
+
+# Filter the data
+low_activity_high_sleep <- data %>%
+  filter(Physical.Activity.Level <= low_activity_threshold,
+         Sleep.Duration >= high_sleep_threshold)
+
+# Check the distribution of BMI Category in this filtered subset
+table(low_activity_high_sleep$BMI.Category)
+```
+
+```{r}
+table(data$BMI.Category)
+```
+
+
+
+### Is the age distribution follows a normal distribution.
+```{r}
+ggplot(data, aes(sample=Sleep.Duration)) +
+  stat_qq() +
+  stat_qq_line(color="blue") +
+  labs(title="Q-Q Plot for Age") +
+  theme_minimal()
+```
+
+
+### Show the cumulative distribution of daily steps.
+```{r}
+ggplot(data, aes(x=Daily.Steps)) +
+  stat_ecdf(geom="step", color="purple") +
+  labs(title="ECF Plot for Daily Steps",
+       x="Daily Steps", y="ECDF") +
+  theme_minimal()
+
+```
+
+
+```{r}
+ggplot(data, aes(x=Gender, fill=BP.Category)) +
+  geom_bar(position="fill") +
+  labs(title="Blood Pressure Categories by Gender",
+       x="Gender", y="Proportion") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(data, aes(x=BP.Category, y=Daily.Steps, fill=BP.Category)) +
+  geom_violin(alpha=0.5) +
+  geom_boxplot(width=0.1, fill="white", color="black") +
+  labs(title="Daily Steps by Blood Pressure Category",
+       x="Blood Pressure Category", y="Daily Steps") +
+  theme_minimal() 
+```
+#### Regression Analyses of Sleep Duration
+```{r}
+mlr <- lm(log(Sleep.Duration) ~ AgeGroup + Gender + Stress.Level + Daily.Steps + Physical.Activity.Level + BMI.Category, data = data)
+
+summary(mlr)
+```
+
+
+
+
+```{r}
+hist(residuals(mlr), 
+     main = "Histogram of Residuals", 
+     xlab = "Residuals", 
+     ylab = "Frequency", 
+     col = "lightblue", 
+     border = "black", 
+     prob = TRUE)  # Set to TRUE for density overlay
+
+lines(density(residuals(mlr)), 
+      col = "red", 
+      lwd = 2)  # Add density curve
+```
+
+
+```{r}
+# Plot 1: Residuals vs. Fitted (Check for constant variance and mean = 0)
+plot(mlr$fitted.values, mlr_$residuals,
+     main = "constant variance and mean=0",
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     pch = 20,
+     col = "blue")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+
+```{r}
+# Plot 2: Normal Q-Q Plot (Check for normality)
+qqnorm(mlr$residuals, main = "Normal Q-Q Plot", pch = 20)
+qqline(mlr$residuals, col = "red", lwd = 2, pch = 20)
+```
+
+
+```{r}
+# Plot 3: Scale-Location Plot (Check for homoscedasticity)
+plot(mlr$fitted.values, sqrt(abs(mlr$residuals)),
+     main = "Scale-Location Plot",
+     xlab = "Fitted Values",
+     ylab = "Sqrt(|Residuals|)",
+     pch = 20,
+     col = "blue")
+abline(h = median(sqrt(abs(mlr$residuals))), col = "red", lwd = 2)  # Line at median of residuals
+
+```
+
+
+```{r}
+plot(mlr, which = 5, ) #main = "Residuals vs Leverage")
+```
+
+```{r}
+library(ggplot2)
+
+# Residuals vs Fitted Values
+ggplot(data = data.frame(Fitted = mlr$fitted.values, Residuals = mlr$residuals), aes(x = Fitted, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuals vs Fitted Values", x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+# Residuals vs Observation Order
+ggplot(data = data.frame(Order = 1:length(mlr$residuals), Residuals = mlr$residuals), aes(x = Order, y = Residuals)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuals vs Observation Order", x = "Observation Order", y = "Residuals") +
+  theme_minimal()
+```
+
+```{r}
+library(ggplot2)
+
+# Scale-Location Plot
+ggplot(data.frame(Fitted = mlr$fitted.values, Residuals = mlr$residuals), aes(x = Fitted, y = sqrt(abs(Residuals)))) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = median(sqrt(abs(mlr_$residuals))), color = "red", linetype = "dashed") +
+  labs(title = "Scale-Location Plot", x = "Fitted Values", y = "Sqrt(|Residuals|)") +
+  theme_minimal()
+```
+
+
+```{r}
+shapiro.test(residuals(mlr))
+```
+
+
+```{r}
+library(MASS)
+
+# Perform Box-Cox transformation
+boxcox_result <- boxcox(mlr, lambda = seq(-2, 2, by = 0.1))
+
+# Identify the optimal lambda
+optimal_lambda <- boxcox_result$x[which.max(boxcox_result$y)]
+cat("Optimal lambda for transformation:", optimal_lambda, "\n")
+
+# Transform the dependent variable based on the optimal lambda
+if (optimal_lambda == 0) {
+  data$Sleep.Duration.transformed <- log(data$Sleep.Duration)
+} else {
+  data$Sleep.Duration.transformed <- (data$Sleep.Duration^optimal_lambda - 1) / optimal_lambda
+}
+
+# Refit the model with the transformed dependent variable
+slm_transformed <- lm(Sleep.Duration.transformed ~ AgeGroup + Gender + Stress.Level + Daily.Steps + Physical.Activity.Level + BMI.Category, data = data)
+
+# Summary of the new model
+summary(slm_transformed)
+
+# Check residuals for normality
+qqnorm(residuals(slm_transformed))
+qqline(residuals(slm_transformed))
+shapiro.test(residuals(slm_transformed))
+```
+
+```{r}
+shapiro.test(residuals(slm_transformed))
+```
+- Several tranformation methods were employed to see if normality assumptions of the residuals would be statistically significant using the shaprio-wilk test but none of them seemed to. 
+- The normality assumption does not impact the validity of the model's coefficients or predictions as linear regression model can still provide unbiased estimates of coefficients even if the residuals are not normally distributed. 
+- It may give the idea that linear regression does not sufficiently fit the structure of the data especially if the data has some level of nature of non linearity. 
+- In this case, non parametric approach or altternative methods can be adopted to fit the data, like classification methods. 
+
